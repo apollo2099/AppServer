@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.TaskMapper" >
+
+	
+	
+	<sql id="Base_Column_List">
+	    id,
+	    task_name, 
+	    target_object,
+	    target_method, 
+	    target_date,
+	    description,
+	    case when status=1 then '启用' else '停用' end as statusName,
+	    status,
+	   create_time
+	</sql>
+
+    <select id="queryList" resultType="java.util.HashMap">
+	    SELECT
+	    <include refid="Base_Column_List" />
+	    FROM lv_task_quartz 
+    </select>
+    
+    <select id="getTaskById" resultType="java.util.HashMap">
+      SELECT
+	    <include refid="Base_Column_List" />
+	    FROM lv_task_quartz  where id=${id}
+    </select>
+    
+    <!-- 添加任务信息 -->
+	<insert id="insertTask" useGeneratedKeys="true" keyProperty="id" parameterType="map">
+		INSERT INTO lv_task_quartz (
+		    id,
+		    task_name, 
+		    target_object,
+		    target_method, 
+		    target_date,
+		    description,
+		    status,
+		    create_time
+		) VALUES (
+			#{id},
+			#{task_name,jdbcType=VARCHAR},
+			#{target_object,jdbcType=VARCHAR},
+			#{target_method,jdbcType=VARCHAR},
+			#{target_date,jdbcType=VARCHAR},
+			#{description,jdbcType=VARCHAR},
+			#{status,jdbcType=INTEGER},
+			now()
+		)
+	</insert>
+
+ 
+    <!--修改任务信息   -->
+	<update id="updateTask" parameterType="map">
+		UPDATE lv_task_quartz SET
+				        task_name=#{task_name,jdbcType=VARCHAR},
+						target_object=#{target_object,jdbcType=VARCHAR},
+						target_method=#{target_method,jdbcType=VARCHAR},
+						target_date=#{target_date,jdbcType=VARCHAR},
+						description=#{description,jdbcType=VARCHAR}
+		WHERE
+		               id = ${id}
+	</update>
+	
+	<!--修改任务状态 -->
+	<update id="updateTaskStatus" parameterType="map">
+		update lv_task_quartz set status=${status} where  id = ${id}
+	</update>	
+	
+	
+	<delete id="deleteTask" parameterType="java.util.HashMap">
+		delete from lv_task_quartz
+		<where>
+			<choose>
+				<when test="ids!=null and ids!=''">
+					and id in (${ids})
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+		</where>
+	</delete>
+</mapper>

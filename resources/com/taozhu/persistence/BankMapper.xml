@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.BankMapper" >
+	<select id="queryList" resultType="java.util.HashMap">
+		SELECT id,bank_name,code,create_time
+			FROM lv_bank b
+			<where>
+				<if test="bank_name!=null and bank_name!=''">
+					and b.bank_name=#{bank_name}
+				</if>
+				<if test="code!=null and code!=''">
+					and b.code=#{code}
+				</if>
+				<if test="subBusinessCode!=null and subBusinessCode!='' ">
+				 and EXISTS (select 1 from lv_business_bank bs where b.code=bs.bank_code and bs.sub_business_code=#{subBusinessCode})
+				</if>
+			</where>
+	</select>
+	
+	<select id="queryBankById" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+			SELECT id,bank_name,code,create_time
+			FROM lv_bank
+			<where>
+				<if test="id!=null and id!=''">
+					and id=#{id}
+				</if>
+			</where>
+		 order by id
+	</select>
+	
+	<!-- 根据银行编码查询详情 (for web) -->
+	<select id="queryBankByCode" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+			SELECT b.id,b.bank_name,b.code,b.create_time
+			FROM lv_bank b
+			<where>
+				<if test="bank_code!=null and bank_code!=''">
+					and code=${bankCode}
+				</if>
+				<if test="branch_code!=null and branch_code!=''">
+				    and  EXISTS(SELECT 1 FROM lv_bank_branch bs WHERE b.code=bs.bank_code and bs.code=${branch_code} )
+				</if>
+			</where>
+		 order by id
+	</select>
+	
+		<!-- 根据银行名称查询详情 (for web) -->
+	<select id="queryBankByName" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+			SELECT b.id,b.bank_name,b.code,b.create_time
+			FROM lv_bank b
+			<where>
+				<if test="bank_name!=null and bank_name!=''">
+					and bank_name=#{bank_name}
+				</if>
+			</where>
+		 order by id
+	</select>
+	
+	<insert id="insertBank" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.Map">
+		insert into lv_bank(
+		bank_name,
+		code,
+		create_time
+		)
+		values
+		(
+			#{bank_name},
+			#{code},
+			now()
+		)
+	</insert>
+	<update id="updateBank" parameterType="java.util.Map">
+		update lv_bank 
+		<set>
+		    modify_time = now()
+			<if test="bank_name!=null and bank_name!=''">
+				,bank_name=#{bank_name}
+			</if>
+			<if test="code!=null and code!=''">
+				,code=#{code}
+			</if>
+		</set> 
+		 	where id=#{id}
+	</update>
+	
+	<!-- 根据银行编码查询网点列表 -->
+	<select id="queryBranchList" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		select id,bank_code,branch_name,code,create_time,order_value from lv_bank_branch 
+			<where>
+					<if test="bankCode!=null and bankCode!=''">
+						and bank_code = #{bankCode}
+					</if>
+					<if test="branchName!=null and branchName!=''">
+						and branch_name = #{branchName}
+					</if>
+			</where>
+			order by order_value
+	</select>
+	<insert id="insertBankBranch" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.HashMap">
+		insert into lv_bank_branch(
+			bank_code,
+			branch_name,
+			order_value,
+			code,
+			create_time
+		)
+		values(
+			#{bank_code},
+			#{branch_name},
+			#{order_value},
+			#{code},
+			now()
+		)
+	</insert>
+	<update id="updateBankBranch" parameterType="java.util.HashMap">
+		update lv_bank_branch
+		<set>
+			modify_time = now()
+			<if test="bank_code!=null and bank_code!=''">
+				,bank_code=#{bank_code}
+			</if>
+			<if test="branch_name!=null and branch_name!=''">
+				,branch_name=#{branch_name}
+			</if>
+			<if test="order_value!=null and order_value!=''">
+				,order_value=#{order_value}
+			</if>
+			<if test="code!=null and code!=''">
+				,code=#{code}
+			</if>
+		</set>
+			where id=#{id}
+	</update>
+	<select id="queryBranchDetails" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		select id,branch_title,branch_address,create_time,branch_code,code,branch_desc from lv_bank_branch_details
+		<where>
+				<if test="branchCode!=null and branchCode!=''">
+						and branch_code=#{branchCode}
+				</if>
+				<if test="branchAddress!=null and branchAddress!=''">
+					and branch_address =#{branchAddress}
+				</if>
+				<if test="branchTitle!=null and branchTitle!=''">
+					and branch_title =#{branchTitle}
+				</if>
+		</where>
+		order by branch_desc
+	</select>
+	<insert id="insertBankBranchDetails" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.HashMap">
+		insert into lv_bank_branch_details(
+			branch_title,
+			branch_desc,
+			branch_code,
+			branch_address,
+			code,
+			create_time
+		)
+		values(
+			#{branch_title},
+			#{branch_desc},
+			#{branch_code},
+			#{branch_address},
+			#{code},
+			now()
+		)
+		
+	</insert>
+	<select id="queryBranchBanner" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		select id,banner_name,banner_path,banner_desc,banner_type,branch_code,create_time,code,web_url,order_value from lv_branch_banner where is_show=1 
+				<if test="branchCode!=null and branchCode!=''">
+						and branch_code=#{branchCode}
+				</if>
+				<if test="bannerName!=null and bannerName!=''">
+					and banner_name = #{bannerName}
+				</if>
+		order by order_value
+	</select>
+	<delete id="deleteBank" parameterType="java.util.HashMap">
+		delete from lv_bank 
+		<where>
+			<if test="ids!=null and ids!=''">
+				and id in (${ids})
+			</if>
+			<if test="ids==null or ids==''">
+				and 1=2
+			</if>
+		</where>
+	</delete>
+	<select id="calculate" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	  SELECT (SELECT COUNT(*) FROM temp_bank   WHERE BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid}  ) AS TOTAL,
+	  (SELECT COUNT(*)    FROM temp_bank   WHERE BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid} AND MSG IS NOT NULL   ) AS ERROR_TOTAL  FROM DUAL  
+	</select>
+	<select id="bankCode" resultType="java.lang.Integer">
+		select IFNULL(MAX(code),100000) from lv_bank
+	</select>
+	<select id="queryErrorDatas" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select BANK_NAME,MSG FROM TEMP_BANK WHERE BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid} AND MSG IS NOT NULL
+	</select>
+	<update id="validate" parameterType="java.util.Map">
+		update temp_bank t set BATCH_NO = BATCH_NO,msg='名称以存在;'
+		 where T.BATCH_NO = #{batchNo}
+		        AND T.RELATED_TEMPLATE_CUID = #{templateCuid}
+		       AND EXISTS (SELECT 1 FROM lv_bank l WHERE l.bank_name = t.bank_name)
+	</update>
+	<insert id="insertByTempBank" parameterType="java.util.HashMap"  useGeneratedKeys="true" keyProperty="id">
+		insert into lv_bank(bank_name,create_time,code)
+		select bank_name,now(),num+(SELECT IFNULL(MAX(code),100000) FROM lv_bank) from temp_bank where  msg is null AND BATCH_NO = #{batchNo} AND RELATED_TEMPLATE_CUID = #{templateCuid}
+	</insert>
+</mapper>

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.Base" >
+    <update id="createTable" parameterType="java.lang.String" >
+        create table ${tableName}
+        (
+        id number(40) not null
+        )
+        PCTUSED 0
+        PCTFREE 10
+        INITRANS 5
+        MAXTRANS 100
+        STORAGE (
+        INITIAL 16K
+        NEXT 8M
+        BUFFER_POOL DEFAULT
+        )
+    </update>
+    <update id="createSeq" parameterType="java.lang.String" >
+    create sequence ${seqName}
+		minvalue 0
+		maxvalue 99999999999999
+		start with 1
+		increment by 1
+		cache 20
+    </update>
+    <update id="addTablePk" parameterType="java.util.Map" >
+        alter table ${tableName} add constraint pk_${tableName}_id primary key (${colName})
+    </update>
+    <update id="addTableColumn" parameterType="java.util.Map">
+        alter table ${tableName} add $colName$ ${colType} ${nullAble}
+    </update>
+    <update id="renameTableColumn" parameterType="java.util.Map">
+        alter table ${tableName} rename column ${colName} to ${newColName}
+    </update>
+    <update id="modifyTableColumn" parameterType="java.util.Map" >
+        alter table ${tableName} modify ${colName} ${colType} ${nullAble}
+    </update>
+    
+    <select id="executeSql" resultType="java.util.Map" parameterType="java.util.Map" >
+    	${sql}
+    </select>
+    <select id="calculate" resultType="java.lang.Integer" parameterType="java.util.Map">
+    	${sql}
+    </select>
+    
+    <update id="updateSql" parameterType="java.util.Map">
+    	${sql}
+    </update>
+    
+    <delete id="deleteSql" parameterType="java.util.Map">
+    	${sql}
+    </delete>
+    
+    <select id="getSysDate" parameterType="java.util.Date">
+        SELECT sysdate FROM DUAL
+    </select>
+    <select id="getSeq" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT ${seqName}.Nextval FROM DUAL
+    </select>
+	<select id="selectGUID" resultType="java.lang.String">
+        SELECT SYS_GUID() FROM DUAL
+    </select>
+
+	<select id="queryDynPage" parameterType="java.util.Map" resultType="java.util.Map" >
+       	select * from ( 
+       	select my_table.*,rownum rn from 
+       	( ${sqlStr} ) my_table where rownum  <![CDATA[<=]]> ${endPos})   	 where  rn  <![CDATA[>=]]> ${startPos} 
+    </select>
+    
+
+    <insert id="insertDynamicTable" parameterType="java.util.Map">
+        insert /*+append*/ into ${tableName}
+        <foreach collection="columnList" item="list"  open="(" separator="," >  
+            ${list.column}
+        </foreach>
+			)values
+         <foreach collection="columnList" item="list"  open="(" separator="," >  
+         	<if test="list.sqlValue != null and list.sqlValue != ''">
+        		${list.sqlValue}
+        	</if>
+        	<if test="list.sqlValue == null or list.sqlValue == ''">
+        		#{list.value}
+        	</if>
+         </foreach>
+        )
+    </insert>
+
+    <update id="updateDynamicTable" parameterType="java.util.Map">
+        UPDATE ${tableName}
+        <set>
+        	<foreach collection="columnList" item="list"   separator="," >  
+            ${list.column} =
+            	<if test="list.sqlValue != null and list.sqlValue != ''">
+        			${list.sqlValue}
+	        	</if>
+	        	<if test="list.sqlValue == null or list.sqlValue == ''">
+	        		#{list.value}
+	        	</if>
+        </foreach>
+        </set>
+        WHERE 
+        <if test="pk!=null and pk!=''">
+	        <foreach collection="pk" item="list" separator="and">
+			  	<if test="list.sqlValue != null and list.sqlValue != ''">
+        			${list.key} = ${list.sqlValue}
+	        	</if>
+	        	<if test="list.value != null and list.value != ''">
+	        		${list.key} = #{list.value}
+	        	</if>
+	        </foreach>
+        </if>
+        <if test="pk==null or pk==''">
+        	1=2
+        </if>
+    </update>
+    <sql id="whereTable">
+    	(SELECT value FROM
+    	<if test="alist!=null and alist !=null">
+    		<foreach collection="alist" item="list" separator="union all" open="(" close=")">
+    			SELECT 
+					#{list.name} as name, 
+					#{list.value} as value
+					from dual 
+    		</foreach>
+    	</if>
+    	 m where m.name = ${tableName}.${name})
+    </sql>
+	<update id="updateTableByList" parameterType="java.util.Map">
+		update ${tableName}
+			<set>
+				${value} = 
+				<include refid="whereTable" />
+			</set>
+		where EXISTS
+			<include refid="whereTable" />
+	</update>
+    <parameterMap type="java.util.HashMap" id="seqParam">
+	   <parameter property="CODE" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+	   <parameter property="DATE" jdbcType="INTEGER" javaType="java.lang.Integer" mode="IN"/>
+	   <parameter property="SEQ" jdbcType="INTEGER" javaType="java.lang.Integer" mode="OUT"/>
+	</parameterMap>
+ 
+    <select id="getBusiDateSeq" parameterMap="seqParam">
+		<![CDATA[
+	      {call GET_SEQ(?, ?, ?)}
+		]]>
+	</select>
+</mapper>

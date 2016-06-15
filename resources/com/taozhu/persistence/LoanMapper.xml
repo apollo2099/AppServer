@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.LoanMapper" >
+	<select id="queryLoanList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select 
+		  l.id,
+		  l.business_code,
+		  (select b.business_name from lv_business b where b.code = l.business_code) as business_name,
+		  l.loan_name,
+		  l.month_rate,
+		  l.on_the_rate,
+		  l.money,
+		  l.deadline,
+		  l.conditions,
+		  l.material,
+		  l.loan_icon 
+		from
+		  lv_loan l 
+		  <where>
+		  		<if test="id!=null and id!=''"> and id=#{id}</if>
+		  		<if test="business_code!=null and business_code!=''">
+		  			and business_code=#{business_code}
+		  		</if>
+		  		<if test="loan_name!=null and loan_name!=''">
+		  			and loan_name=#{loan_name}
+		  		</if>
+		  		<if test="month_rate!=null and month_rate!=''">
+		  			and month_rate=#{month_rate}
+		  		</if>
+		  		<if test="on_the_rate!=null and on_the_rate!=''">
+		  			and on_the_rate=#{on_the_rate}
+		  		</if>
+		  		<if test="money!=null and money!=''">
+		  			and money=#{money}
+		  		</if>
+		  		<if test="deadline!=null and deadline!=''">
+		  			and deadline=#{deadline}
+		  		</if>
+		  		<if test="conditions!=null and conditions!=''">
+		  			and conditions=#{conditions}
+		  		</if>
+		  		<if test="material!=null and material!=''">
+		  			and material=#{material}
+		  		</if>
+		  </where>
+	</select>
+	
+	<select id="queryAppLoanList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select 
+		  l.id,
+		  l.loan_name,
+		  l.month_rate,
+		  l.on_the_rate,
+		  l.money,
+		  l.deadline,
+		  l.conditions,
+		  l.material
+		from
+		  lv_loan l 
+		  <where>
+		  		<if test="id!=null and id!=''"> and id=#{id}</if>
+		  		<if test="business_code!=null and business_code!=''">
+		  			and business_code=#{business_code}
+		  		</if>
+		  		<if test="loan_name!=null and loan_name!=''">
+		  			and loan_name=#{loan_name}
+		  		</if>
+		  		<if test="month_rate!=null and month_rate!=''">
+		  			and month_rate=#{month_rate}
+		  		</if>
+		  		<if test="on_the_rate!=null and on_the_rate!=''">
+		  			and on_the_rate=#{on_the_rate}
+		  		</if>
+		  		<if test="money!=null and money!=''">
+		  			and money=#{money}
+		  		</if>
+		  		<if test="deadline!=null and deadline!=''">
+		  			and deadline=#{deadline}
+		  		</if>
+		  		<if test="conditions!=null and conditions!=''">
+		  			and conditions=#{conditions}
+		  		</if>
+		  		<if test="material!=null and material!=''">
+		  			and material=#{material}
+		  		</if>
+		  </where>
+	</select>
+	<select id="queryLoan"  parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select loan_name,month_rate,on_the_rate,loan_icon,id from lv_loan
+			<where>
+				<if test="id!=null and id!=''"> 
+					and id=#{id}
+				</if>
+		  		<if test="business_code!=null and business_code!=''">
+		  			and business_code=#{business_code}
+		  		</if>
+		  		<if test="loan_name!=null and loan_name!=''">
+		  			and loan_name=#{loan_name}
+		  		</if>
+		  		<if test="month_rate!=null and month_rate!=''">
+		  			and month_rate=#{month_rate}
+		  		</if>
+		  		<if test="on_the_rate!=null and on_the_rate!=''">
+		  			and on_the_rate=#{on_the_rate}
+		  		</if>
+		  		<if test="money!=null and money!=''">
+		  			and money=#{money}
+		  		</if>
+		  		<if test="deadline!=null and deadline!=''">
+		  			and deadline=#{deadline}
+		  		</if>
+		  		<if test="condition!=null and condition!=''">
+		  			and condition=#{condition}
+		  		</if>
+		  		<if test="material!=null and material!=''">
+		  			and material=#{material}
+		  		</if>
+			</where>
+	</select>
+	<insert id="saveLoan"  useGeneratedKeys="true" keyProperty="id" parameterType="java.util.Map">
+		insert into lv_loan(
+			  business_code,
+			  loan_name,
+			  month_rate,
+			  on_the_rate,
+			  money,
+			  deadline,
+			  conditions,
+			  material,
+			  loan_icon,
+			  create_time
+			)
+		values
+		(
+			   #{business_code},
+			   #{loan_name},
+			   #{month_rate},
+			   #{on_the_rate},
+			   #{money},
+			   #{deadline},
+			   #{conditions},
+			   #{material},
+			   #{loan_icon},
+			  now()
+		)
+	</insert>
+	<update id="updateLoan"  parameterType="java.util.Map">
+		update lv_loan
+			<set>
+				<if test="business_code!=null and business_code!=''">
+		  			business_code=#{business_code},
+		  		</if>
+		  		<if test="loan_name!=null and loan_name!=''">
+		  			loan_name=#{loan_name},
+		  		</if>
+		  		<if test="month_rate!=null and month_rate!=''">
+		  			month_rate=#{month_rate},
+		  		</if>
+		  		<if test="on_the_rate!=null and on_the_rate!=''">
+		  			on_the_rate=#{on_the_rate},
+		  		</if>
+		  		<if test="money!=null and money!=''">
+		  			money=#{money},
+		  		</if>
+		  		<if test="deadline!=null and deadline!=''">
+		  			deadline=#{deadline},
+		  		</if>
+		  		<if test="conditions!=null and conditions!=''">
+		  			conditions=#{conditions},
+		  		</if>
+		  		<if test="material!=null and material!=''">
+		  			material=#{material},
+		  		</if>
+		  		<if test="loan_icon!=null and loan_icon!=''">
+		  			loan_icon=#{loan_icon},
+		  		</if>
+			</set>
+			<where>
+				id=#{id}
+			</where>
+	</update>
+	<delete id="deleteALLSelect" parameterType="java.util.HashMap">
+		delete from lv_loan
+		<where>
+			<choose>
+				<when test="ids!=null and  ids!=''">
+					and id in (#{ids})
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+		</where>
+	</delete>
+</mapper>

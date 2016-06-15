@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.FileHandlerMapper" >
+	<select id = "getFileDefine" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT F.ID,
+		       F.DATA_BO,
+		       F.DATA_ROW_NUM,
+		       F.FILE_PATH,
+		       F.HEAD_BO,
+		       F.FILE_BO,
+		       F.CALCULATE_BO,
+		       F.TEMPLATE_CUID,
+		       F.SHEET_NUM,
+		       F.TITLE_ROW_NUM,
+		       F.TEMP_TABLE,
+		       F.ERROR_BO
+		  FROM LV_FILE_DEFINE F
+		 WHERE F.TEMPLATE_CUID = #{templateId}
+	</select>
+	<select id = "findColDefines" parameterType="java.lang.String" resultType="java.util.Map" >
+		 SELECT C.ID,
+		        C.FILE_COL,
+		        C.FILE_COL_INDEX,
+		        C.FROM_COL,
+		        C.FROM_COL,
+		        C.FROM_TABLE,
+		        C.NEED_CAL,
+		        C.NEED_TRANSLATE,
+		        C.RECORD_LABEL_COL,
+		        C.RECORD_SQL,
+		        C.RECORD_VALUE_COL,
+		        C.RELATED_TEMPLATE_CUID,
+		        C.TO_COL,
+		        C.TO_TABLE,
+		        C.BM_CLASS_ID
+		   FROM T_ELT_COL_DEFINE C
+		  WHERE C.RELATED_TEMPLATE_CUID = #{templateId}
+	</select>
+</mapper>

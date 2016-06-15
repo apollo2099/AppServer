@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.MaUserMapper" >
+
+	<sql id="selectFragment">
+		<![CDATA[
+		select 
+			u.id,
+			u.user_code,
+			u.user_password,
+			u.user_name,
+			u.user_sex,
+			u.telephone,
+			u.email,
+			u.address,
+			u.create_time
+		from  ma_user u
+		]]>
+	</sql>
+
+	<sql id="conditionFragment">
+		<where>
+			<if test="id != null"> u.id= #{id,jdbcType=INTEGER} </if>
+			<if test="userCode != null and userCode !=''">and u.user_code = #{userCode,jdbcType=VARCHAR} </if>
+			<if test="userName != null and userName!=''">and u.user_name = #{userName,jdbcType=VARCHAR} </if>
+			<if test="email != null and email!='' "> and u.email = #{email,jdbcType=VARCHAR} </if>
+			<if test="userPassword != null"> and u.user_password = #{userPassword,jdbcType=VARCHAR} </if>
+		</where>
+	</sql>
+	
+	<sql id="orderByFragment">
+		<choose>
+			<when test="orderBy!=null">
+				order by ${orderBy}
+			</when>
+			<otherwise>
+				order by create_time
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<select  id="queryDetails" resultType="java.util.Map"  parameterType="java.util.Map">
+		<include refid="selectFragment" /> 
+			<where>
+			<if test="id != null"> u.id= #{id,jdbcType=INTEGER} </if>
+			</where>
+		<include refid="orderByFragment"/>
+	</select >
+	
+	<select id="commonQuery" resultType="java.util.Map"  parameterType="java.util.Map" >
+		<include refid="selectFragment" /> 
+		<include refid="conditionFragment" /> 
+		<include refid="orderByFragment"/>
+	</select>
+	
+	
+	<!-- 插入 -->
+	<insert id="insertUser" useGeneratedKeys="true" keyProperty="id" parameterType="map">
+		INSERT INTO ma_user (
+		    id,
+			user_code,
+			user_password,
+			user_name,
+			user_sex,
+			telephone,
+			email,
+			address,
+			create_time
+		) VALUES (
+			#{id},
+			#{userCode},
+			#{userPassword},
+			#{userName},
+			#{userSex},
+			#{telephone},
+			#{email},
+			#{address},
+			now()
+		)
+	</insert>
+	
+	 <!-- 修改密码 -->
+	<update id="updateUserPwd" parameterType="map">
+		UPDATE ma_user SET
+			user_password = #{newPassword}
+		WHERE 
+			user_code = #{userCode} 
+	</update>
+	
+	
+	<!--修改用户资料接口  -->
+	<update id="updateUser" parameterType="map">
+		UPDATE ma_user SET
+					user_name = #{userName,jdbcType=VARCHAR},
+					user_sex = #{userSex,jdbcType=VARCHAR},
+					telephone = #{telephone,jdbcType=VARCHAR},
+					email = #{email,jdbcType=VARCHAR},
+					address = #{address,jdbcType=VARCHAR}
+		WHERE
+		            id =#{id}
+	</update>
+	
+	
+</mapper>

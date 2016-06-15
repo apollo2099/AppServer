@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.MainFrameMapper" >
+
+	<sql id="selectFragment">
+		<![CDATA[
+		select 
+			f.id,
+			f.function_code,
+			f.function_name,
+			f.function_page,
+			f.parent_id
+		from  ma_function f
+		]]>
+	</sql>
+
+	<sql id="conditionFragment">
+		<where>
+			<if test="parentId != null"> f.parent_id = #{parentId,jdbcType=NUMERIC} </if>
+		</where>
+	</sql>
+	
+	<sql id="orderByFragment">
+		<choose>
+			<when test="orderBy!=null">
+				order by ${orderBy}
+			</when>
+			<otherwise>
+				order by f.id
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<select id="commonQuery" resultType="java.util.Map"  parameterType="java.util.Map" >
+		<include refid="selectFragment" /> 
+		<include refid="conditionFragment" /> 
+		<include refid="orderByFragment"/>
+	</select>
+	
+</mapper>

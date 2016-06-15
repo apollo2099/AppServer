@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.BankBranchMapper" >
+	<select id="queryBankBranchList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select bs.id,bs.branch_title,bs.branch_desc,bs.branch_code,bs.branch_address,bs.code,bs.create_time,b.branch_name,b.order_value
+		from lv_bank_branch b, lv_bank_branch_details bs where b.code=bs.branch_code
+		
+				<if test="branch_title!=null and branch_title!=''">
+					and bs.branch_title =#{branch_title}
+				</if>
+				<if test="branch_desc!=null and branch_desc!=''">
+					and bs.branch_desc=#{branch_desc}
+				</if>
+				<if test="branch_code!=null and branch_code!=''">
+					and bs.branch_code=${branch_code}
+				</if>
+				<if test="code!=null and code!=''">
+					and bs.code = ${code}
+				</if>
+				<if test="bank_code!=null and bank_code!=''">
+				   and b.bank_code=${bank_code}
+				</if>
+				<if test="id!=null and id!=''">
+					and bs.id=#{id}
+				</if>
+	</select>
+	<select id="getBankBranchList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT CODE,branch_name FROM lv_bank_branch
+	</select>
+	<select id="getBankBranchByCode" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		select id from lv_bank_branch where code=${branch_code}
+	</select>
+	
+	<select id="queryBranchByName" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		select bs.id,bs.branch_name,bs.code
+		from lv_bank_branch bs where branch_name=#{branch_name}
+		and  EXISTS(SELECT 1 FROM lv_bank b WHERE b.code=bs.bank_code and b.bank_name=#{bank_name} )
+	</select>
+	
+
+	<select id="bankBranchDetailsCode" resultType="java.lang.Integer">
+		select IFNULL(MAX(code),210000) from lv_bank_branch_details
+	</select>
+	<select id="bankBranchCode" resultType="java.lang.Integer">
+		select IFNULL(MAX(code),200000) from lv_bank_branch
+	</select>
+	<insert id="insertBankBranch" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id">
+		insert into lv_bank_branch(bank_code,branch_name,order_value,create_time,code)
+			values(#{bank_code},#{branch_name},#{order_value},now(),#{branch_code})
+	</insert>
+	
+	<insert id="insertBankBranchDetails" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id">
+		insert into lv_bank_branch_details(branch_title,branch_desc,branch_code,branch_address,code,postcode,telephone,create_time)
+			values(#{branch_title},#{branch_desc},#{branch_code},#{branch_address},#{code},#{postcode},#{telephone},now())
+	</insert>
+	
+
+	<update id="updateBankBranch" parameterType="java.util.HashMap">
+		update lv_bank_branch set
+			branch_name =#{branch_name},
+			order_value=#{order_value}
+			where code=#{branch_code}
+	</update>
+	
+	<update id="updateBankBranchDetails" parameterType="java.util.HashMap">
+		update lv_bank_branch_details set
+			branch_title =#{branch_title},
+			branch_desc=#{branch_desc},
+			branch_code=#{branch_code},
+			code = #{code},
+			branch_address = #{branch_address}
+			where id=#{id}
+	</update>
+	<delete id="deleteALLSelect" parameterType="java.util.HashMap">
+		delete from lv_bank_branch_details
+		<where>
+			<choose>
+				<when test="ids!=null and  ids!=''">
+					and id in (#{ids})
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+		</where>
+	</delete>
+	<select id="calculate" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	  SELECT (SELECT COUNT(*) FROM TEMP_BANK_BRANCH   WHERE BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid}  ) AS TOTAL,
+	  (SELECT COUNT(*)    FROM TEMP_BANK_BRANCH   WHERE BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid} AND MSG IS NOT NULL   ) AS ERROR_TOTAL  FROM DUAL  
+	</select>
+	<select id="queryErrorDatas" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select BANK_NAME,BRANCH_NAME,ADDRESS,POSTCODE,TELEPHONE,MSG FROM TEMP_BANK_BRANCH WHERE BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid} AND MSG IS NOT NULL
+	</select>
+	<update id="validateByBankBranch" parameterType="java.util.HashMap">
+		UPDATE TEMP_BANK_BRANCH T set msg = '该网点已经存在'
+			WHERE T.BATCH_NO = #{batchNo}
+		        AND T.RELATED_TEMPLATE_CUID = #{templateCuid}
+		       AND EXISTS (SELECT 1 FROM lv_bank_branch l,lv_bank b WHERE l.bank_code = b.code and l.branch_name = t.BRANCH_NAME and b.bank_name = t.bank_name)
+	</update>
+	<insert id="insertByBank" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id">
+		insert into lv_bank(bank_name,create_time,CODE)
+			SELECT DISTINCT bank_name,now(),num+(select max(code) from lv_bank) FROM temp_bank_branch b WHERE BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid} AND NOT EXISTS (SELECT 1 FROM lv_bank  l WHERE l.bank_name = b.bank_name) ;
+	</insert>
+	<insert id="insertByBankBranch" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id">
+		insert into lv_bank_branch(bank_code,branch_name,order_value,create_time,CODE)
+			select (select code from lv_bank where bank_name =b.bank_name),branch_name,num,now(),num+(select max(code) from lv_bank_branch) 
+				from temp_bank_branch b where  BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid}  and MSG IS NULL
+	</insert>
+	<insert id="insertByBankBranchDetails" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id">
+		insert into lv_bank_branch_details(branch_title,branch_code,branch_address,create_time,code,postcode,telephone)
+			select branch_name,(select code from lv_bank_branch where branch_name = b.branch_name),address,now(),
+				num+(select max(code) from lv_bank_branch_details),postcode,telephone from  
+				 temp_bank_branch b where  BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid}  and MSG IS NULL
+	</insert>
+</mapper>

@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.UserMapper" >
+
+	
+	
+	<sql id="Base_Column_List">
+	    w.id,
+	    w.account, 
+	    w.nick_name,
+	    w.head_image, 
+	    w.user_type,
+	    w.sex,
+	    w.recommend,
+	    w.introduction,
+	    w.create_time,
+	    w.mobile,
+	    w.tel,
+	    w.is_allow,
+	    w.is_answer,
+	    w.is_attention,
+	    w.user_card_path,
+	    w.office,
+	    w.user_id
+	</sql>
+    
+   <!--  *****************************************************************
+	       *****       后台接口
+	       *****************************************************************-->
+    <!-- 查询所有的用户信息-->
+    <select id="queryList" resultType="java.util.HashMap">
+	    SELECT
+	    <include refid="Base_Column_List" />
+	    FROM lv_user w where w.status<![CDATA[<>]]>-1
+	    <if test="mobile!=null and mobile!=''">
+	    	and account = #{mobile}
+	    </if>
+    </select>
+    <select id="queryUserById" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+    	select head_image,nick_name from lv_user 
+    	<where>
+    		<choose>
+    			<when test="userId!=null and userId!=''">
+    				user_id = #{userId}
+    			</when>
+    			<otherwise>
+    				and 1=2
+    			</otherwise>
+    		</choose>
+    	</where>
+    </select>
+    <select id="queryUserByIds" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+    	select head_image,nick_name,user_id from lv_user 
+    	<where>
+    		<choose>
+    			<when test="userList!=null and userList!=''">
+    			user_id in
+    				<foreach collection="userList" item="user" open="(" close=")" separator=",">
+    					#{user}
+    				</foreach>
+    			</when>
+    			<otherwise>
+    				and 1=2
+    			</otherwise>
+    		</choose>
+    	</where>
+    </select>
+    <!--查找帐号信息列表(包含银行网点的业务经理信息)  -->
+	<select id="queryManagerList" resultType="java.util.HashMap">
+		SELECT
+		<if test="longitude!=null and longitude!='' and latitude!=null and latitude!='' ">
+		SQRT(POWER((w.longitude-#{longitude})*#{jl_jd},2)+POWER((w.latitude-#{latitude})*#{jl_wd},2)) as distance,
+		</if>
+		b.branch_name,bk.bank_name,
+		<include refid="Base_Column_List" />
+				 FROM lv_user w,lv_bank_branch b,lv_bank bk 
+				 where w.branch_code=b.code 
+				 and b.bank_code=bk.code
+				 and w.status<![CDATA[<>]]>-1
+			
+				<if test="branchCode!=null and branchCode!=''">
+					and w.branch_code=${branchCode}
+					and w.user_type=1
+				</if>
+
+				<if test="subBusinessCode!=null and subBusinessCode!='' ">
+				   and EXISTS (select 1 from lv_business_user bu where w.user_id=bu.user_code and bu.sub_business_code=${subBusinessCode})
+                   and w.user_type=1
+				</if>
+				<if test="longitude!=null and  longitude!='' and latitude!=null and latitude!='' ">
+					and SQRT(POWER((w.longitude-#{longitude})*#{jl_jd},2)+POWER((w.latitude-#{latitude})*#{jl_wd},2)) <![CDATA[<]]>#{range}
+					and w.user_type=1
+				</if>
+		 order by w.id
+	</select>
+	
+	
+	
+    <!--根据帐号查看详情信息  -->
+	<select id="queryUserDetails" resultType="java.util.HashMap">
+		SELECT 
+			w.account, 
+		    w.nick_name,
+		    w.head_image, 
+		    w.recommend,
+		    w.introduction,
+		    w.user_type,
+		    w.sex,
+		    w.mobile,
+		    w.is_allow,
+	        w.is_answer,
+	        w.is_attention,
+		    w.user_card_path,
+		    w.branch_code,
+		    w.office,
+		    w.user_id
+		 FROM lv_user w where  w.status<![CDATA[<>]]>-1
+				<if test="account!=null and account!=''">
+					and w.account=#{account,jdbcType=VARCHAR}
+				</if>
+				<if test="password!=null and password!='' ">
+					and w.password=#{password,jdbcType=VARCHAR}
+				</if>
+				<if test="id!=null and id!=''">
+				    and w.id=#{id,jdbcType=INTEGER}
+				</if>
+				<if test="userType!=null and userType!=''">
+				   and w.user_type=${userType}
+				</if>
+				<if test="userId!=null and userId!=''">
+				   and w.user_id=${userId}
+				</if>
+		 order by id
+	</select>
+	
+	<!-- 查询用户密码详情信息 -->
+	<select id="queryUserPwdDetails" resultType="java.util.HashMap">
+		SELECT 
+			w.account,
+			w.password, 
+		    w.user_id
+		 FROM lv_user w 
+		 where w.user_id=${userId}  and w.status<![CDATA[<>]]>-1
+		 order by id
+	</select>
+	
+	
+	
+	<!-- 获取关注用户列表 -->
+	<select id="queryUserAttention" resultType="java.util.HashMap">
+		SELECT  u.nick_name,u.head_image, u.account,u.user_id,u.recommend,bb.branch_name
+		FROM lv_user u,lv_user_attention ua,lv_bank_branch bb 
+		where u.user_id=ua.attention_code 
+		and u.branch_code=bb.code
+		and u.status<![CDATA[<>]]>-1
+		and ua.user_code =(SELECT s.user_id FROM lv_user s where s.user_id=${userId})
+		order by u.id
+	</select>
+	
+	<select id="queryUserAttionById" resultType="java.util.HashMap">
+	   select id from lv_user_attention where user_code=${userId} and attention_code=${userAttentionId}
+	</select>
+	
+	
+	 <!--用户注册接口 -->
+	<insert id="insertRegisterUser" useGeneratedKeys="true" keyProperty="id" parameterType="map">
+		INSERT INTO lv_user (
+		    id,
+			account,
+			password,
+			status,
+			user_id,
+			nick_name,
+			head_image,
+			user_type,
+			sex,
+			introduction,
+			is_allow,
+			user_card_path,
+			mobile,
+			create_time
+		) VALUES (
+			#{id,jdbcType=INTEGER},
+			#{account,jdbcType=VARCHAR},
+			#{password,jdbcType=VARCHAR},
+			#{status,jdbcType=INTEGER},
+			#{userId,jdbcType=INTEGER},
+			#{nick_name,jdbcType=VARCHAR},
+			#{head_image,jdbcType=VARCHAR},
+			#{user_type,jdbcType=INTEGER},
+			#{sex,jdbcType=INTEGER},
+			#{introduction,jdbcType=VARCHAR},
+			#{is_allow,jdbcType=INTEGER},
+			#{user_card_path,jdbcType=VARCHAR},
+			#{mobile,jdbcType=VARCHAR},
+			#{createTime, jdbcType=DATE}
+		)
+	</insert>
+
+	 <!-- 修改密码 -->
+	<update id="updateUserPwd" parameterType="map">
+		UPDATE lv_user SET
+			password = #{newPassword,jdbcType=VARCHAR}
+		WHERE 
+			user_id=${userId}
+	</update>
+	
+    <!--根据帐号修改用户密码-->
+	<update id="updateUserPwdByAccount" parameterType="map">
+		UPDATE lv_user SET
+			password = #{password,jdbcType=VARCHAR}
+		WHERE 
+			account=#{account}
+	</update>
+
+    <!-- 保存用户关注信息-->
+	<insert id="saveUserAttention" useGeneratedKeys="true" keyProperty="id" parameterType="map">
+	INSERT INTO lv_user_attention (
+			user_code,
+			attention_code,
+			code,
+			create_time
+		) VALUES (
+			#{userCode,jdbcType=INTEGER},
+			#{attentionCode,jdbcType=INTEGER},
+			#{code,jdbcType=VARCHAR},
+			#{createTime}
+		)
+	</insert>
+
+
+ <!-- 取消关注接口 -->
+ <delete id="deleteUserAttention" parameterType="java.util.HashMap">
+     delete from lv_user_attention where user_code=${userId} and attention_code=${userAttentionId}
+ </delete>
+
+    <!--修改用户资料接口  -->
+	<update id="updateUser" parameterType="map">
+		UPDATE lv_user
+		<set>
+		              <if test="nickname !=null and nickname!=''">
+		               nick_name=#{nickname,jdbcType=VARCHAR},
+		              </if>
+		               <if test="headImage !=null and headImage!=''">
+	                   head_image=#{headImage,jdbcType=VARCHAR}, 
+	                   </if>
+	                   <if test="sex !=null and sex!=''">
+	                   sex=#{sex},
+	                   </if>
+	                   <if test="userCardPath !=null and userCardPath!=''">
+	                   user_card_path=#{userCardPath},
+	                   </if>
+	                     <if test="introduction !=null and introduction!=''">
+	                   introduction=#{introduction,jdbcType=VARCHAR},
+	                   </if>
+	                   modify_time=now()
+	     </set>
+		WHERE
+		              user_id=${userId}
+	</update>
+	
+    <!--设置是否允许聊天  -->
+	<update id="updateUserAllow" parameterType="map">
+		UPDATE lv_user SET
+		is_allow = #{isAllow,jdbcType=INTEGER}
+		WHERE
+		user_id=${userId}
+	</update>
+    
+    <!-- 更新帐号地理位置 -->
+	<update id="updateUserPosition" parameterType="map">
+		UPDATE lv_user SET
+		longitude = #{longitude,jdbcType=DOUBLE},
+		latitude = #{latitude,jdbcType=DOUBLE}
+		WHERE
+		user_id=${userId}
+	</update>
+	
+	<!-- 修改被关注的业务经理的状态 -->
+	<update id="updateUserAttentionFlag" parameterType="map">
+	    UPDATE lv_user SET
+		is_attention = 1
+		WHERE
+		user_id=${userId}
+	</update>
+	
+	
+	<!--  *****************************************************************
+	  *****后台管理web 脚本映射
+	  *****************************************************************-->
+	<!-- 后台 公共部分-->
+	<sql id="selectFragment">
+		<![CDATA[
+		select 
+		    u.id,
+		    u.account, 
+		    u.nick_name,
+		    u.head_image, 
+		    u.user_type,
+		    case when u.user_type=1 then '业务经理' else '普通用户' end as user_type_name,
+		    case when u.sex=1 then '男' else '女' end as sex_name,
+		    u.sex,
+		    u.introduction,
+		    u.create_time,
+		    u.mobile,
+		    u.tel,
+		    case when u.is_allow=1 then '允许' else '不允许' end as is_allow_flag,
+		    is_allow,
+		    u.user_card_path,
+		    u.branch_code,
+		    u.office,
+		    u.user_id
+		from  lv_user u
+		]]>
+	 </sql>
+
+	<sql id="conditionFragment">
+		<where>
+			<if test="id != null">and u.id= #{id,jdbcType=INTEGER} </if>
+			<if test="account != null">and u.account = #{account,jdbcType=VARCHAR} </if>
+			<if test="password!=null">and u.password=#{password,jdbcType=VARCHAR}</if>
+			<if test="nickName != null">and u.nick_name = #{nickName,jdbcType=VARCHAR} </if>
+			<if test="userType != null">and u.user_type = #{userType,jdbcType=VARCHAR} </if>
+		</where>
+	</sql>
+	
+	<sql id="orderByFragment">
+		<choose>
+			<when test="orderBy!=null">
+				order by ${orderBy}
+			</when>
+			<otherwise>
+				order by create_time
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<select id="commonQuery" resultType="java.util.Map"  parameterType="java.util.Map" >
+		<include refid="selectFragment" /> 
+		<include refid="conditionFragment" /> 
+		<include refid="orderByFragment"/>
+	</select>
+	
+	<!-- 查询普通客户信息列表 -->
+	<select id="queryUserGrid" resultType="java.util.Map"  parameterType="java.util.Map" >
+		<include refid="selectFragment" /> 
+		where u.user_type=2 and u.status<![CDATA[<>]]>-1
+			  <if test="account != null and account!=''">and u.account = #{account,jdbcType=VARCHAR} </if>
+			 <if test="password!=null and password!=''">and u.password=#{password}</if>
+			 <if test="nickName != null and nickName!=''">and u.nick_name = #{nickName,jdbcType=VARCHAR} </if>
+		<include refid="orderByFragment"/>
+	</select>
+
+
+
+   <!-- 查询业务经理信息列表 -->
+	<select id="queryUserManagerGrid" resultType="java.util.Map"  parameterType="java.util.Map">
+		<include refid="selectFragment" /> 
+		where u.user_type=1 and u.status<![CDATA[<>]]>-1
+		     <if test="account != null and account !=''">and u.account = #{account,jdbcType=VARCHAR} </if>
+			 <if test="password!=null and password !=''">and u.password=#{password,jdbcType=VARCHAR}</if>
+			 <if test="nickName != null and nickName!=''">and u.nick_name = #{nickName,jdbcType=VARCHAR} </if>
+		<include refid="orderByFragment"/>
+	</select>
+	
+	<!-- 根据用户id查询用户详情 -->
+	 <select id="getUserById" resultType="java.util.Map"  parameterType="java.util.Map" >
+		<include refid="selectFragment" /> 
+		where u.id=#{id,jdbcType=INTEGER} and u.status<![CDATA[<>]]>-1
+		<include refid="orderByFragment"/>
+	</select>
+	
+	<!-- 根据帐号查询用户详情 -->
+	 <select id="getUserByAcccount" resultType="java.util.Map"  parameterType="java.util.Map" >
+		<include refid="selectFragment" /> 
+		where u.account=#{account,jdbcType=VARCHAR} and u.status<![CDATA[<>]]>-1
+		<include refid="orderByFragment"/>
+	</select>
+	
+	<!-- 获取关注用户列表 -->
+	<select id="queryWebUserAttention" resultType="java.util.HashMap">
+		SELECT  u.nick_name,u.head_image, u.account,ua.attention_code
+		FROM lv_user u,lv_user_attention ua 
+		where u.user_id=ua.user_code and u.status<![CDATA[<>]]>-1
+	    <if test="account != null">
+		     and u.account=#{account,jdbcType=VARCHAR}
+		</if>
+		 <if test="nick_name != null">
+		     and u.nick_name =#{nick_name,jdbcType=VARCHAR}
+		</if>
+		order by u.id
+	</select>
+	
+	<!-- 插入用户信息/业务经理信息 -->
+	<insert id="saveWebUser" useGeneratedKeys="true" keyProperty="id" parameterType="map">
+		INSERT INTO lv_user (
+			account,
+			password,
+			nick_name,
+			head_image,
+			user_type,
+			sex,
+			recommend,
+			introduction,
+			mobile,
+			tel,
+			is_allow,
+			user_card_path,
+			longitude,
+			latitude,
+			status,
+			branch_code,
+			user_id,
+			office,
+			create_time
+		) VALUES (
+			#{account,jdbcType=VARCHAR},
+			#{password,jdbcType=VARCHAR},
+			#{nick_name,jdbcType=VARCHAR},
+			#{head_image,jdbcType=VARCHAR},
+			#{user_type,jdbcType=INTEGER},
+			#{sex,jdbcType=INTEGER},
+			#{recommend,jdbcType=VARCHAR},
+			#{introduction,jdbcType=VARCHAR},
+			#{mobile,jdbcType=VARCHAR},
+			#{tel,jdbcType=VARCHAR},
+			#{is_allow,jdbcType=INTEGER},
+			#{user_card_path,jdbcType=VARCHAR},
+			#{longitude,jdbcType=DOUBLE},
+			#{latitude,jdbcType=DOUBLE},
+			#{status,jdbcType=INTEGER},
+			#{branch_code,jdbcType=VARCHAR},
+			#{user_id,jdbcType=INTEGER},
+			#{office},
+			#{create_time}
+		)
+	</insert>
+
+    <!--修改用户信息/业务经理信息   -->
+	<update id="updateWebUser" parameterType="map">
+		UPDATE lv_user SET
+		               nick_name=#{nick_name,jdbcType=VARCHAR},
+	                   head_image=#{head_image,jdbcType=VARCHAR}, 
+	                   sex=#{sex,jdbcType=INTEGER},
+					   mobile=#{mobile,jdbcType=VARCHAR},
+					   tel=#{tel,jdbcType=VARCHAR},
+					   is_allow=#{is_allow,jdbcType=INTEGER},
+					   user_card_path=#{user_card_path,jdbcType=VARCHAR},
+					   longitude=#{longitude,jdbcType=DOUBLE},
+					   latitude=#{latitude,jdbcType=DOUBLE},
+					   branch_code=#{branch_code,jdbcType=VARCHAR},
+					   recommend=#{recommend,jdbcType=VARCHAR},
+					   user_type=#{user_type,jdbcType=INTEGER},
+					   office=#{office},
+	                   introduction=#{introduction,jdbcType=VARCHAR}
+		WHERE
+		               id = #{id,jdbcType=INTEGER}
+	</update>
+	
+	<!-- 软删除用户信息 -->
+	<update id="updateUserDelStatus">
+		update lv_user set status=-1
+		<where>
+				<choose>
+					<when test="ids!=null and ids!=''">
+						and id in (${ids})
+					</when>
+					<otherwise>
+						and 1=2
+					</otherwise>
+				</choose>
+			</where>
+	</update>	
+		
+		
+	<!-- 定义用户临时表字典 -->	
+  <sql id="Temp_Column_List">
+	    NUM,
+	    ACCOUNT, 
+	    NICKNAME,
+	    MOBILE, 
+	    RECOMMEND,
+	    BRANCH_CODE
+	</sql>	
+	<!-- 查询符合条件的用户临时表信息 -->
+	<select id="queryTempUserList" resultType="java.util.Map"  parameterType="java.util.Map" >
+	      select 
+	      <include refid="Temp_Column_List"/>
+	       from temp_user where MSG is null and  BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid}
+	</select>
+	
+	<!-- 查询未通过校验的临时表信息 -->
+	<select id="queryTempErrorDatas" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select 
+		<include refid="Temp_Column_List"/>
+		FROM temp_user WHERE MSG IS not NULL and  BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid}
+	</select>
+	
+	<!-- 数据统计 -->
+	<select id="calculate" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	  SELECT (SELECT COUNT(*) FROM temp_user   WHERE BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid}  ) AS TOTAL,
+	  (SELECT COUNT(*)    FROM temp_user   WHERE BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid} AND MSG IS NOT NULL   ) AS ERROR_TOTAL  FROM DUAL  
+	</select>
+	
+	<!-- 更新错误数据用户临时表 -->
+	<update id="updateTempUserMsg">
+		 update temp_user set MSG=#{msg}
+		 where NUM=${num} 
+		 and BATCH_NO = #{batchNo}  
+		 and RELATED_TEMPLATE_CUID = #{templateCuid} 
+	</update>	
+</mapper>

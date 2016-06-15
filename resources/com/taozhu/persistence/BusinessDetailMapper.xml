@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.BusinessDetailMapper" >
+	<select id="queryList" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		select id,sub_name,sub_images,sub_type,business_code,sub_desc,create_time,modify_time,modify_name,code
+		from lv_business_details
+			<where>
+				<choose>
+					<when test="businessCode!=null and businessCode!=''">
+						and business_code=#{businessCode}
+					</when>
+					<otherwise>
+						and 1=2
+					</otherwise>
+				</choose>
+			</where>
+		 order by order_value
+	</select>
+	
+	<select id="queryBusinessDetailById" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+			SELECT id,sub_name,sub_images,sub_type,business_code,sub_desc,create_time,modify_time,modify_name,code  ,order_value,is_visible
+			FROM lv_business_details
+			<where>
+				<if test="id!=null and id!=''">
+					and id=#{id}
+				</if>
+			</where>
+		 order by id
+	</select>
+	
+	<insert id="insertBusinessDetail" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.Map">
+		insert into lv_business_details(
+		sub_name,
+		code,
+		business_code,
+		sub_type,
+		sub_images,
+		sub_desc,
+		order_value,
+		is_visible,
+		create_time
+		)
+		values
+		(
+			#{sub_name},
+			#{code},
+			#{business_code},
+			#{sub_type},
+			#{sub_images},
+			#{sub_desc},
+			#{order_value},
+			#{is_visible},
+			now()
+		)
+	</insert>
+	<update id="updateBusinessDetail" parameterType="java.util.Map">
+		update lv_business_details 
+		<set>
+		    modify_time = now()
+			<if test="sub_name!=null and bank_name!=''">
+				,sub_name=#{sub_name}
+			</if>
+			<if test="code!=null and code!=''">
+				,code=#{code}
+			</if>
+			<if test="order_value!=null and order_value!=''">
+			  ,order_value=#{order_value}
+			</if>
+			<if test="business_code!=null and business_code!=''">
+			  ,business_code=#{business_code}
+			</if>
+			<if test="sub_type!=null and sub_type!=''">
+			  ,sub_type=#{sub_type}
+			</if>
+			<if test="sub_desc!=null and sub_desc!=''">
+			  ,sub_desc=#{sub_desc}
+			</if>
+			<if test="sub_images!=null and sub_images!=''">
+			  ,sub_images=#{sub_images}
+			</if>
+			<if test="is_visible!=null and is_visible!=''">
+			 ,is_visible=#{is_visible}
+			</if>
+		</set> 
+		 	where id=#{id}
+	</update>
+	<select id="businessDetailCode" resultType="java.lang.Integer">
+		SELECT IFNULL(MAX(CODE),310000) FROM lv_business_details
+	</select>
+	<delete id="deleteALLSelect" parameterType="java.util.HashMap">
+		delete from lv_business_details
+		<where>
+			<choose>
+				<when test="ids!=null and  ids!=''">
+					and id in (#{ids})
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+		</where>
+	</delete>
+	
+		<select id="queryWebList" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		select id,sub_name,sub_images,sub_type,business_code,sub_desc,create_time,modify_time,modify_name,code ,order_value,is_visible
+		from lv_business_details
+			<where>
+				<choose>
+					<when test="businessCode!=null and businessCode!=''">
+						and business_code=#{businessCode}
+					</when>
+				</choose>
+			</where>
+		 order by order_value
+	</select>
+</mapper>

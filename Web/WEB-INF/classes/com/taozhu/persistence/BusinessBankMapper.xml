@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.BusinessBankMapper" >
+	<select id="queryBusinessBankById" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT id,sub_business_code,bank_code,create_time,CODE FROM lv_business_bank
+			<where>
+				<if test="id!=null and id!=''">
+					and id=#{id}
+				</if>
+			</where>
+	</select>
+	<select id="queryBusinessBankList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT d.sub_name,u.bank_name,b.sub_business_code,b.code,b.id 
+		FROM lv_business_bank b ,lv_bank u,lv_business_details d 
+		WHERE d.code=b.sub_business_code 
+		AND u.code=b.bank_code
+		<if test="sub_name!=null and sub_name!=''">
+			and d.sub_name=#{sub_name}
+		</if>
+		<if test="bank_name!=null and bank_name!=''">
+			and u.bank_name=#{bank_name}
+		</if>
+	</select>
+	<insert id="insertBusinessBank" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.Map">
+		insert into lv_business_bank(
+			sub_business_code,
+			bank_code,
+			code,
+			create_time
+		)
+		values
+		(
+			#{business_code},
+			#{bank_code},
+			#{code},
+			now()
+		)
+	</insert>
+	<update id="updateBusinessBank" parameterType="java.util.Map">
+		update lv_business_bank 
+			<set>
+				<if test="business_code!=null and business_code!=''">
+					sub_business_code = #{business_code},
+				</if>
+				<if test="bank_code!=null and bank_code!=''">
+					bank_code=#{bank_code}
+				</if>
+			</set>
+			where id=#{id}
+	</update>
+	<delete id="deleteALLSelect" parameterType="java.util.HashMap">
+		delete from lv_business_bank
+		<where>
+			<choose>
+				<when test="ids!=null and  ids!=''">
+					and id in (#{ids})
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+		</where>
+	</delete>
+</mapper>

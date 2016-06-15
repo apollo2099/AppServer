@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.BatchMapper" >		
+	<!-- 定义用户临时表字典 -->	
+  <sql id="Temp_Column_List">
+	    NUM,
+	    BANK_NAME,
+	    BRANCH_NAME,
+	    ADDRESS,
+	    POSTCODE,
+	    TELEPHONE,
+	    ACCOUNT, 
+	    NICKNAME,
+	    MOBILE, 
+	    OFFICE,
+	    RECOMMEND
+	</sql>	
+	<!-- 查询符合条件的用户临时表信息 -->
+	<select id="queryTempBatchList" resultType="java.util.Map"  parameterType="java.util.Map" >
+	      select 
+	      <include refid="Temp_Column_List"/>
+	       from temp_batch where MSG is null and  BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid}
+	</select>
+	
+	<!-- 查询未通过校验的临时表信息 -->
+	<select id="queryTempErrorDatas" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select 
+		<include refid="Temp_Column_List"/>
+		FROM temp_batch WHERE MSG IS not NULL and  BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid}
+	</select>
+	
+	<!-- 数据统计 -->
+	<select id="calculate" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	  SELECT (SELECT COUNT(*) FROM temp_batch   WHERE BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid}  ) AS TOTAL,
+	  (SELECT COUNT(*)    FROM temp_batch   WHERE BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid} AND MSG IS NOT NULL   ) AS ERROR_TOTAL  FROM DUAL  
+	</select>
+	
+	<!-- 更新错误数据用户临时表 -->
+	<update id="updateTempBatchMsg">
+		 update temp_batch set MSG=#{msg}
+		 where NUM=${num} 
+		 and BATCH_NO = #{batchNo}  
+		 and RELATED_TEMPLATE_CUID = #{templateCuid} 
+	</update>	
+</mapper>

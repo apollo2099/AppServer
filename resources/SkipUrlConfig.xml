@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<skip-url>
+	<url>bannerController.do</url>
+	<url>bankController.do</url>
+	<url>businessController.do</url>
+	<url>messageAuthCodeController.do</url>
+	<url>questionController.do</url>
+	<url>userController.do</url>
+	<url>photoController.do</url>
+	<url>applicationController.do</url>
+	<url>newsController.do</url>
+</skip-url>

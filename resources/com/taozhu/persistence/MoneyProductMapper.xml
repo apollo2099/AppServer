@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.MoneyProductMapper" >
+	<select id="queryMoneyProductList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+		  id,
+		  business_code,
+		  (select b.business_name from lv_business b where b.code = business_code) as business_name,
+		  product_name,
+		  product_code,
+		  earnings_type,
+		  subscribe,
+		  origin_money,
+		  subscribe_way,
+		  deal_trench,
+		  yield_rate,
+		  create_time 
+		FROM
+		  lv_money_product 
+		  <where>
+		  		<if test="id!=null and id!=''">
+		  			and id=#{id}
+		  		</if>
+		  		<if test="business_code!=null and business_code!=''">
+		  			and business_code=#{business_code}
+		  		</if>
+		  		<if test="product_name!=null and product_name!=''">
+		  			and product_name=#{product_name}
+		  		</if>
+		  		<if test="product_code!=null and product_code!=''">
+		  			and product_code=#{product_code}
+		  		</if>
+		  		<if test="earnings_type!=null and earnings_type!=''">
+		  			and earnings_type=#{earnings_type}
+		  		</if>
+		  		<if test="subscribe!=null and subscribe!=''">
+		  			and subscribe=#{subscribe}
+		  		</if>
+		  		<if test="origin_money!=null and origin_money!=''">
+		  			and origin_money=#{origin_money}
+		  		</if>
+		  		<if test="subscribe_way!=null and subscribe_way!=''">
+		  			and subscribe_way=#{subscribe_way}
+		  		</if>
+		  		<if test="deal_trench!=null and deal_trench!=''">
+		  			and deal_trench=#{deal_trench}
+		  		</if>
+		  		<if test="yield_rate!=null and yield_rate!=''">
+		  			and yield_rate=#{yield_rate}
+		  		</if>
+		  </where>
+	</select>
+	<select id="queryAppMoneyProductList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT 
+		  id,
+		  product_name,
+		  product_code,
+		  earnings_type,
+		  subscribe,
+		  origin_money,
+		  subscribe_way,
+		  deal_trench,
+		  yield_rate
+		FROM
+		  lv_money_product 
+		  <where>
+		  		<if test="id!=null and id!=''">
+		  			and id=#{id}
+		  		</if>
+		  		<if test="business_code!=null and business_code!=''">
+		  			and business_code=#{business_code}
+		  		</if>
+		  		<if test="product_name!=null and product_name!=''">
+		  			and product_name=#{product_name}
+		  		</if>
+		  		<if test="product_code!=null and product_code!=''">
+		  			and product_code=#{product_code}
+		  		</if>
+		  		<if test="earnings_type!=null and earnings_type!=''">
+		  			and earnings_type=#{earnings_type}
+		  		</if>
+		  		<if test="subscribe!=null and subscribe!=''">
+		  			and subscribe=#{subscribe}
+		  		</if>
+		  		<if test="origin_money!=null and origin_money!=''">
+		  			and origin_money=#{origin_money}
+		  		</if>
+		  		<if test="subscribe_way!=null and subscribe_way!=''">
+		  			and subscribe_way=#{subscribe_way}
+		  		</if>
+		  		<if test="deal_trench!=null and deal_trench!=''">
+		  			and deal_trench=#{deal_trench}
+		  		</if>
+		  		<if test="yield_rate!=null and yield_rate!=''">
+		  			and yield_rate=#{yield_rate}
+		  		</if>
+		  </where>
+	</select>
+	<select id="queryMoneyProduct" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select id,product_name,yield_rate,origin_money from lv_money_product
+			<where>
+				<if test="id!=null and id!=''"> 
+					and id=#{id}
+				</if>
+		  		<if test="business_code!=null and business_code!=''">
+		  			and business_code=#{business_code}
+		  		</if>
+			</where>
+	</select>
+	<insert id="saveMoneyProduct" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.Map">
+		insert into lv_money_product(
+			business_code,
+		  product_name,
+		  product_code,
+		  earnings_type,
+		  subscribe,
+		  origin_money,
+		  subscribe_way,
+		  deal_trench,
+		  yield_rate,
+		  create_time
+		)
+		values(
+			#{business_code},
+		  #{product_name},
+		  #{product_code},
+		  #{earnings_type},
+		  #{subscribe},
+		  #{origin_money},
+		  #{subscribe_way},
+		  #{deal_trench},
+		  #{yield_rate},
+		  now()
+		)
+	</insert>
+	<update id="updateMoneyProduct" parameterType="java.util.Map">
+		update lv_money_product
+			<set>
+				<if test="business_code!=null and business_code!=''">
+		  			business_code=#{business_code},
+		  		</if>
+		  		<if test="product_name!=null and product_name!=''">
+		  			product_name=#{product_name},
+		  		</if>
+		  		<if test="product_code!=null and product_code!=''">
+		  			product_code=#{product_code},
+		  		</if>
+		  		<if test="earnings_type!=null and earnings_type!=''">
+		  			earnings_type=#{earnings_type},
+		  		</if>
+		  		<if test="subscribe!=null and subscribe!=''">
+		  			subscribe=#{subscribe},
+		  		</if>
+		  		<if test="origin_money!=null and origin_money!=''">
+		  			origin_money=#{origin_money},
+		  		</if>
+		  		<if test="subscribe_way!=null and subscribe_way!=''">
+		  			subscribe_way=#{subscribe_way},
+		  		</if>
+		  		<if test="deal_trench!=null and deal_trench!=''">
+		  			deal_trench=#{deal_trench},
+		  		</if>
+		  		<if test="yield_rate!=null and yield_rate!=''">
+		  			yield_rate=#{yield_rate},
+		  		</if>
+			</set>
+			<where>
+				id=#{id}
+			</where>
+	</update>
+	<delete id="deleteALLSelect" parameterType="java.util.HashMap">
+		delete from lv_money_product
+		<where>
+			<choose>
+				<when test="ids!=null and  ids!=''">
+					and id in (#{ids})
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+		</where>
+	</delete>
+</mapper>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.LvInterfaceMapper" >
+
+	
+	<sql id="Base_Column_List">
+		id,
+		inf_name,
+		inf_path,
+		inf_param,
+		inf_result,
+		inf_remark,
+		code,
+		createTime
+	</sql>
+
+
+	<select id="queryInterfaceList" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT * FROM lv_interface
+			<where>
+				<if test="inf_name!=null and inf_name!=''">
+					and inf_name=#{inf_name}
+				</if>
+				<if test="inf_path!=null and inf_path!=''">
+					and inf_path=#{inf_path}
+				</if>
+				<if test="id!=null and id!=''">
+					and id=#{id}
+				</if>
+			</where>
+		 order by id
+	</select>
+	
+	<select id="queryInterfaceById" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT * FROM lv_interface
+			<where>
+				<if test="id!=null and id!=''">
+					and id=#{id}
+				</if>
+				<if test="id==null or id==''">
+					and 1=2
+				</if>
+			</where>
+		 order by id
+	</select>
+	    <!-- 插入 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.Map">
+		INSERT INTO lv_interface (
+			inf_name,
+			inf_path,
+			inf_param,
+			inf_result,
+			inf_remark,
+			code,
+			create_time
+		) VALUES (
+			#{inf_name},
+			#{inf_path},
+			#{inf_param},
+			#{inf_result},
+			#{inf_remark},
+			#{code},
+			#{create_time}
+		)
+	</insert>
+	
+	<update id="update" parameterType="map">
+		UPDATE lv_interface SET
+			inf_name = #{inf_name},
+			inf_path = #{inf_path},
+			inf_param = #{inf_param},
+			inf_result = #{inf_result},
+			inf_remark = #{inf_remark}			
+		WHERE 
+			ID = #{id} 
+	</update>
+	<delete id="deleteALLSelect" parameterType="java.util.HashMap">
+		delete from lv_interface
+		<where>
+			<choose>
+				<when test="ids!=null and  ids!=''">
+					and id in (#{ids})
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+		</where>
+	</delete>
+</mapper>

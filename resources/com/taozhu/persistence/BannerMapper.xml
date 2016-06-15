@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.BannerMapper" >
+	<select id="queryList" resultType="java.util.HashMap">
+		SELECT id,banner_name,banner_path,banner_desc,
+		            case when banner_type=1 then 'web' else '广告详情' end as banner_type,
+		            case when is_show=1 then '是' else '否' end as is_show,code,
+		            web_url,date_format(create_time,"%Y-%m-%d %T") as create_time ,date_format(modify_time,"%Y-%m-%d %T") as modify_time,modify_name  
+			FROM lv_banner where is_show=1 order by order_value
+	</select>
+	<select id="queryBannerByCode" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT id,banner_name,banner_path,banner_desc,
+		            case when banner_type=1 then 'web' else '广告详情' end as banner_type,
+		            case when is_show=1 then '是' else '否' end as is_show,code,
+		            web_url,date_format(create_time,"%Y-%m-%d %T") as create_time ,date_format(modify_time,"%Y-%m-%d %T") as modify_time,modify_name  
+			FROM lv_banner where is_show=1 
+			<if test="code!=null and code!=''">
+				and code = #{code}
+			</if>
+			<if test="code==null or code==''">
+				and 1=2
+			</if>
+	</select>
+	<select id="querybankBranchDetails" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT branch_title,branch_desc,branch_address,CODE FROM lv_bank_branch_details 
+		<where>
+				<choose>
+					<when test="bannerCode!=null and bannerCode!=''">
+						 branch_code = #{bannerCode}
+					</when>
+					<otherwise>
+						 1=2
+					</otherwise>
+				</choose>
+			</where>
+	</select>
+	<select id="querybranchList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT lv_branch_banner.id,lv_branch_banner.banner_name,lv_branch_banner.banner_path,
+		lv_branch_banner.banner_desc,lv_branch_banner.banner_type,lv_branch_banner.web_url,lv_branch_banner.branch_code,lv_branch_banner.code,
+			case when banner_type=1 then 'web' else '广告详情' end as banner_type_name, 
+			case when is_show=1 then '是' else '否' end as is_show_name,
+			lv_bank_branch.branch_name 
+			FROM lv_branch_banner  LEFT JOIN lv_bank_branch ON lv_bank_branch.code = lv_branch_banner.branch_code 
+			<where>
+				<choose>
+					<when test="code!=null and code!=''">
+						and lv_branch_banner.code = #{code}
+					</when>
+				</choose>
+			</where>
+			 order by lv_branch_banner.order_value
+	</select>
+	
+	<select id="queryDetails" parameterType="java.util.HashMap" resultType="java.util.HashMap" >
+		SELECT id,banner_name,banner_path,banner_desc,banner_type,web_url,branch_code,code 
+			FROM lv_branch_banner 
+			<where>
+				<choose>
+					<when test="bannerCode!=null and bannerCode!=''">
+						 branch_code = #{bannerCode}
+					</when>
+					<otherwise>
+						 1=2
+					</otherwise>
+				</choose>
+			</where>
+			 order by order_value
+	</select>
+	<select id="queryBranchList" parameterType="java.util.HashMap" resultType="java.util.HashMap" >
+		SELECT id,banner_name,banner_path,banner_desc,banner_type,web_url,branch_code,code, create_time,modify_time,modify_name 
+			FROM lv_branch_banner 
+			
+			 order by order_value
+	</select>
+	
+	<insert id="saveLv_banner" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id">
+		insert into lv_banner (
+			  banner_name,
+			  banner_path,
+			  banner_desc,
+			  banner_type,
+			  is_show		 ,
+			  web_url		 ,
+			  order_value,
+			  create_time,
+			  modify_time,
+			  modify_name,
+			  code
+		)values(
+			  #{banner_name},
+			  #{banner_path},
+			  #{banner_desc},
+			  #{banner_type},
+			  #{is_show} 		,
+			  #{web_url} 		,
+			  #{order_value},
+			  NOW(),
+			  NOW(),
+			  #{modify_name},
+			  #{code} 			
+		)
+	</insert>
+	<insert id="saveLv_branch_banner" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id">
+			insert into lv_branch_banner
+			(  banner_name  ,
+				  banner_path  ,
+				  banner_desc  ,
+				  banner_type  ,
+				  is_show 		  ,
+				  web_url 		  ,
+				  order_value  ,
+				  branch_code  ,
+				  create_time  ,
+				  modify_time  ,
+				  modify_name  ,
+				  code )
+			values(
+				  #{banner_name}  ,
+				  #{banner_path}  ,
+				  #{banner_desc}  ,
+				  #{banner_type}  ,
+				  #{is_show} 		  ,
+				  #{web_url} 		  ,
+				  #{order_value}  ,
+				  #{branch_code}  ,
+				  NOW(),
+			      NOW(),
+				  #{modify_name}  ,
+				  #{code} 				
+			)
+	</insert>
+
+	<select id="queryBannerList" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT id,banner_name,banner_path,banner_desc,is_show,banner_type,order_value,
+		            case when banner_type=1 then 'web' else '广告详情' end as banner_type_name,
+		            case when is_show=1 then '是' else '否' end as is_show_name,
+		            web_url,date_format(create_time,"%Y-%m-%d %T") as create_time ,date_format(modify_time,"%Y-%m-%d %T") as modify_time,modify_name 
+			FROM lv_banner
+			<where>
+				<if test="banner_name!=null and banner_name!=''">
+					and banner_name=#{banner_name}
+				</if>
+				<if test="banner_path!=null and banner_path!=''">
+					and banner_path=#{banner_path}
+				</if>
+				<if test="banner_type!=null and banner_type!=''">
+					and banner_type =#{banner_type}
+				</if>
+				<if test="id!=null and id!=''">
+					and id=#{id}
+				</if>
+			</where>
+	</select>
+	<select id="queryBannerDetail" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT id,banner_name,banner_path,banner_desc,
+		             banner_type,order_value,
+		             is_show,
+		            web_url, branch_code
+			FROM lv_branch_banner 
+			<where>
+				<if test="id!=null and id!=''">
+					and lv_branch_banner.id=#{id}
+				</if>
+			</where>
+	</select>
+
+	
+	<select id="bannerCode" resultType="java.lang.Integer" parameterType="java.util.HashMap">
+		SELECT IFNULL(MAX(code),600000) as ID
+			FROM lv_banner
+	</select>
+	<select id="branchBannerCode" resultType="java.lang.Integer" parameterType="java.util.HashMap">
+		SELECT IFNULL(MAX(code),220000) as ID
+			FROM lv_branch_banner
+	</select>
+	
+	<update id="updateBanner" parameterType="java.util.Map">
+		update lv_banner 
+		<set>
+		    modify_time = now()
+			<if test="banner_name!=null and banner_name!=''">
+				,banner_name=#{banner_name}
+			</if>
+			<if test="banner_path!=null and banner_path!=''">
+				,banner_path=#{banner_path}
+			</if>
+			<if test="banner_desc!=null and banner_desc!=''">
+				,banner_desc=#{banner_desc}
+			</if>
+			<if test="banner_type!=null and banner_type!=''">
+				,banner_type=#{banner_type}
+			</if>
+			<if test="is_show!=null and is_show!=''">
+				,is_show=#{is_show}
+			</if>
+			<if test="web_url!=null and web_url!=''">
+				,is_show=#{is_show}
+			</if>
+			<if test="order_value!=null and order_value!=''">
+				,order_value=#{order_value}
+			</if>
+			<if test="modify_name!=null and modify_name!=''">
+				,modify_name=#{modify_name}
+			</if>
+		</set> 
+		 	where id=#{id}
+	</update>
+	<update id="updateBranchBanner" parameterType="java.util.Map">
+		update lv_branch_banner 
+		<set>
+		    modify_time = now()
+			<if test="banner_name!=null and banner_name!=''">
+				,banner_name=#{banner_name}
+			</if>
+			<if test="banner_path!=null and banner_path!=''">
+				,banner_path=#{banner_path}
+			</if>
+			<if test="banner_desc!=null and banner_desc!=''">
+				,banner_desc=#{banner_desc}
+			</if>
+			<if test="banner_type!=null and banner_type!=''">
+				,banner_type=#{banner_type}
+			</if>
+			<if test="is_show!=null and is_show!=''">
+				,is_show=#{is_show}
+			</if>
+			<if test="web_url!=null and web_url!=''">
+				,is_show=#{is_show}
+			</if>
+			<if test="banner_code!=null and banner_code!=''">
+				,banner_code=#{banner_code}
+			</if>
+			<if test="order_value!=null and order_value!=''">
+				,order_value=#{order_value}
+			</if>
+			<if test="modify_name!=null and modify_name!=''">
+				,modify_name=#{modify_name}
+			</if>
+		</set> 
+		 	where id=#{id}
+	</update>
+	<delete id="deleteBanner" parameterType="java.util.HashMap">
+		delete from lv_banner
+		<where>
+			<choose>
+				<when test="ids!=null and ids!=''">
+					and id in (${ids})
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+		</where>
+	</delete>
+	<delete id="deleteBranchBanner" parameterType="java.util.HashMap">
+		delete from lv_branch_banner
+		<where>
+			<choose>
+				<when test="ids!=null and ids!=''">
+					and id in (${ids})
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+		</where>
+	</delete>
+</mapper>

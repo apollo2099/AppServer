@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.MessageAuthCodeMapper" >
+
+	
+	<sql id="Base_Column_List">
+	    id,
+	    mobile, 
+	    auth_code,
+	    create_time, 
+	     case when status=1 then '启用' when status=0 then '失效' else '删除' end status,
+	    code 
+	</sql>
+    
+    
+    <!-- 查询手机验证码列表 -->
+	<select id="queryList" resultType="java.util.HashMap">
+		SELECT 
+		<include refid="Base_Column_List" />
+		 FROM lv_message_auth_code 
+			<where>
+				<if test="mobile!=null and mobile!=''">
+					and mobile = #{mobile}
+				</if>
+				<if test="auth_code!=null and auth_code!=''">
+				    and auth_code=#{auth_code}
+				</if>
+				<if test="status!=null and status!=''">
+				    and status=${status}
+				</if>
+			</where>
+		 order by id
+	</select>
+	
+	
+
+    <!--查询账户验证码信息  -->
+	<select id="queryDetails" resultType="java.util.HashMap">
+		SELECT 
+		<include refid="Base_Column_List" />
+		 FROM lv_message_auth_code  
+			<where>
+				<if test="mobile!=null and mobile!=''">
+					and mobile = #{mobile}
+				</if>
+				<if test="authCode!=null and authCode!=''">
+				    and auth_code=#{authCode}
+				</if>
+			</where>
+			and  status=1
+		 order by id
+	</select>
+	
+
+	
+	 <!-- 插入验证码 -->
+	<insert id="saveMessageAuthCode" useGeneratedKeys="true" keyProperty="id" parameterType="map">
+		INSERT INTO lv_message_auth_code (
+		    id,
+		    mobile, 
+		    auth_code,
+		    create_time, 
+		    status,
+		    code
+		) VALUES (
+			#{id},
+			#{mobile},
+			#{authCode},
+			#{createTime},
+			#{status},
+			#{code}
+		)
+	</insert>
+	
+
+
+    <!--修改验证码状态  -->
+	<update id="updateMessageAuthStatus" parameterType="map">
+		UPDATE lv_message_auth_code SET
+		    status=#{status}
+		WHERE
+		    mobile = #{mobile}
+	</update>
+	
+		<update id="updateMessageAuthStatusById" parameterType="map">
+		UPDATE lv_message_auth_code SET
+		    status=#{status}
+		WHERE
+		    id = ${id}
+	</update>
+	
+	
+</mapper>

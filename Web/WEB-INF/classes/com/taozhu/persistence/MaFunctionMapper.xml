@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.MaFunctionMapper" >
+
+	<sql id="selectFragment">
+		<![CDATA[
+		select 
+			f.id,
+			f.function_code,
+			f.function_name,
+			f.function_page,
+			f.parent_id
+		from  ma_function f
+		]]>
+	</sql>
+
+	<sql id="conditionFragment">
+		<where>
+		    <if test="id != null">and  f.id = #{id} </if>
+			<if test="functionCode != null and functionCode!=''"> and f.function_code = #{functionCode,jdbcType=VARCHAR} </if>
+			<if test="functionName != null and functionName!=''">and f.function_name= #{functionName,jdbcType=VARCHAR} </if>
+			<if test="functionPage != null and functionPage!=''"> and f.function_page = #{functionPage,jdbcType=VARCHAR} </if>
+			<if test="parentId != null and parentId!='' ">and f.parent_id = #{parentId,jdbcType=VARCHAR} </if>
+		</where>
+	</sql>
+	
+	<sql id="orderByFragment">
+		<choose>
+			<when test="orderBy!=null">
+				order by ${orderBy}
+			</when>
+			<otherwise>
+				order by id
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<select id="commonQuery" resultType="java.util.Map"  parameterType="java.util.Map" >
+		<include refid="selectFragment" /> 
+		<include refid="conditionFragment" /> 
+		<include refid="orderByFragment"/>
+	</select>
+	
+	
+	<!-- 插入菜单信息 -->
+	<insert id="saveMaFunction" useGeneratedKeys="true" keyProperty="id" parameterType="map">
+		INSERT INTO ma_function (
+		  	id,
+			function_code,
+			function_name,
+			function_page,
+			parent_id
+		) VALUES (
+			#{id},
+			#{functionCode},
+			#{functionName},
+			#{functionPage},
+			#{parentId}
+		)
+	</insert>
+	
+	
+	
+	<!--修改菜单信息  -->
+	<update id="updateMaFunction" parameterType="map">
+		UPDATE ma_function SET
+            function_code=#{functionCode},
+			function_name=#{functionName},
+			function_page=#{functionPage},
+			parent_id=#{parentId}
+		WHERE
+		          id = #{id}
+	</update>
+	
+	
+</mapper>

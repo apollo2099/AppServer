@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.BusinessMapper" >
+	<select id="queryList" resultType="java.util.HashMap">
+		select id,business_name,code,create_time,modify_time,order_value,images from lv_business order by order_value
+	</select>
+	<select id="queryBusinessDetails" resultType="java.util.HashMap" parameterType="java.lang.String">
+		select sub_images,sub_name,code,sub_desc,sub_type from lv_business_details 
+		<where>
+			<if test="businessCode!=null and businessCode!=''">
+			  and business_code=#{businessCode}
+			</if>
+			<if test="isVisible!=null and isVisible!=''">
+				and is_visible =#{isVisible}
+			</if>
+			<if test="businessCode==null or businessCode==''">
+				<if test="isVisible==null or isVisible==''">
+					and 1=2
+				</if>
+			</if>
+		</where>
+		 order by id
+	</select>
+	<select id="queryBusinessByName" resultType="java.util.HashMap" parameterType="java.lang.String">
+		select sub_images,sub_name,code from lv_business_details 
+			<where>
+			<choose>
+				<when test="businessName!=null and businessName!=''">
+					and sub_name like '%${businessName}%'
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+				</choose>
+			</where>
+	</select>
+	<select id="queryBusinessById" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+			SELECT id,business_name,code,modify_name,create_time,modify_time,order_value
+			FROM lv_business
+			<where>
+				<if test="id!=null and id!=''">
+					and id=#{id}
+				</if>
+			</where>
+		 order by id
+	</select>
+	
+	
+		<select id="queryWebBusinessByName" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+			SELECT b.id,b.code
+			FROM lv_business b,lv_business_details bd where b.code=bd.business_code
+				<if test="business_name!=null and business_name!=''">
+				  and b.business_name=#{business_name}
+				</if>
+				<if test="sub_name!=null and sub_name!=''">
+				 and bd.sub_name=#{sub_name}
+				</if>
+		 order by id
+	</select>
+	
+	<select id="queryListAndBusinessDetails" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT l.business_name,d.sub_images,d.sub_name,d.code FROM lv_business l LEFT JOIN lv_business_details d ON l.code=d.business_code ORDER BY l.id,d.id
+	</select>
+	<select id="queryBusinessCode" resultType="java.lang.Integer">
+		select IFNULL(max(code),300000) from lv_business
+	</select>
+	<insert id="insertBusiness" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.Map">
+		insert into lv_business(
+		business_name,
+		order_value,
+		code,
+		create_time
+		)
+		values
+		(
+			#{business_name},
+			#{order_value},
+			#{code},
+			now()
+		)
+	</insert>
+	<update id="updateBusiness" parameterType="java.util.Map">
+		update lv_business 
+		<set>
+		    modify_time = now()
+			<if test="business_name!=null and bank_name!=''">
+				,business_name=#{business_name}
+			</if>
+			<if test="code!=null and code!=''">
+				,code=#{code}
+			</if>
+			<if test="order_value!=null and order_value!=''">
+				,order_value=#{order_value}
+			</if>
+		</set> 
+		 	where id=#{id}
+	</update>
+	
+	<delete id="deleteBusiness" parameterType="java.util.HashMap">
+		delete from lv_business
+		<where>
+			<choose>
+				<when test="ids!=null and ids!=''">
+					and id in (${ids})
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+		</where>
+	</delete>
+	<delete id="deleteBusinessDetails" parameterType="java.util.HashMap">
+		delete from lv_business_details
+			<where>
+			<choose>
+				<when test="ids!=null and ids!=''">
+					and business_code in (${ids})
+				</when>
+				<otherwise>
+					and 1=2
+				</otherwise>
+			</choose>
+		</where>
+	</delete>
+	
+	
+  <!-- 定义用户临时表字典 -->	
+  <sql id="Temp_Column_List">
+	    NUM,
+	    BUSINESS_NAME, 
+	    SUB_NAME,
+	    SUB_IMAGES
+	</sql>	
+	<!-- 查询符合条件的用户临时表信息 -->
+	<select id="queryTempUserList" resultType="java.util.Map"  parameterType="java.util.Map" >
+	      select 
+	      <include refid="Temp_Column_List"/>
+	       from temp_business where MSG is null and  BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid}
+	</select>
+	
+	<!-- 查询未通过校验的临时表信息 -->
+	<select id="queryTempErrorDatas" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		select 
+		<include refid="Temp_Column_List"/>
+		FROM temp_business WHERE MSG IS not NULL and  BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid}
+	</select>
+	
+	<!-- 数据统计 -->
+	<select id="calculate" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	  SELECT (SELECT COUNT(*) FROM temp_business   WHERE BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid}  ) AS TOTAL,
+	  (SELECT COUNT(*)    FROM temp_user   WHERE BATCH_NO = #{batchNo}  AND RELATED_TEMPLATE_CUID = #{templateCuid} AND MSG IS NOT NULL   ) AS ERROR_TOTAL  FROM DUAL  
+	</select>
+	
+	<!-- 更新错误数据用户临时表 -->
+	<update id="updateBusinessUserMsg">
+		 update temp_business set MSG=#{msg}
+		 where NUM=${num} 
+		 and BATCH_NO = #{batchNo}  
+		 and RELATED_TEMPLATE_CUID = #{templateCuid} 
+	</update>	
+</mapper>

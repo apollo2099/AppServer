@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.taozhu.persistence.QuestionMapper" >
+
+	<select id="queryList" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT id,
+			title,
+			code,
+			description
+		 FROM lv_question 
+		<where>
+			<choose>
+				<when test="subBusinessCode!=null">
+					business_code=#{subBusinessCode}
+				</when>
+				<otherwise>
+					1=2
+				</otherwise>
+			</choose>
+		</where>
+		 order by id
+	</select>
+	<select id="queryQuestionAttentionListByQCode"  resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT q.id,q.attention FROM lv_question_attention q 
+		<where>
+			<if test="questionCode!=null and questionCode!='' ">
+			   and q.question_code=#{questionCode};
+			</if>
+		</where>
+	</select>
+	<select id="queryQuestionAttentionList" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT q.id,q.attention,q.question_code,CONCAT((SELECT d.`sub_name` FROM lv_business_details d WHERE d.code=l.`business_code`),'-',l.title)  AS title FROM lv_question_attention q LEFT JOIN lv_question l ON q.question_code=l.code
+		<where>
+			<if test="title!=null and title!=''">
+				and l.title=#{title}
+			</if>
+			<if test="id!=null and id!=''">
+				and q.id=#{id}
+			</if>
+			<if test="questionCode!=null and questionCode!='' ">
+			   and q.question_code=#{questionCode};
+			</if>
+		</where>
+	</select>
+	
+	<insert id="saveQuestionAttention" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.Map">
+		INSERT INTO lv_question_attention (
+			question_code,
+			attention
+		) VALUES (
+			#{question_code},
+			#{attention}
+		)
+	</insert>
+	<update id="updateQuestionAttention" parameterType="java.util.Map">
+		UPDATE lv_question_attention SET
+			question_code = #{question_code},
+			attention = #{attention}
+		WHERE 
+			ID = #{id} 
+	</update>
+	<delete id="deleteQuestionAttention" parameterType="java.util.HashMap">
+		delete from lv_question_attention 
+		<where>
+			<if test="ids!=null and ids!=''">
+				and id in (${ids})
+			</if>
+			<if test="ids==null or ids==''">
+				and 1=2
+			</if>
+		</where>
+	</delete>
+	<select id="queryUserQuesList" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT 
+			lq.title,
+			lq.description,
+			lu.nick_name,
+			lu.id
+		 FROM lv_question lq
+		 inner join lv_user_question uq
+		 on lq.code = uq.question_code
+		 inner join lv_user lu
+		 on uq.user_code= lu.code
+		<where>
+			<choose>
+				<when test="userCode!=null">
+					uq.user_code=#{userCode,jdbcType=VARCHAR}
+				</when>
+				<otherwise>
+					1=2
+				</otherwise>
+			</choose>
+		</where>
+		 order by uq.user_code
+	</select>
+	<select id="queryUserQuestion" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+		SELECT  COUNT(1)  FROM
+		  lv_user_question l,
+		  lv_user u,
+		  lv_question q 
+		WHERE l.user_code = u.user_id 
+		  AND l.question_code = q.code 
+		  <if test="userId!=null and userId!=''">
+		  	AND u.user_id = #{userId} 
+		  </if>
+		  <if test="subBusinessCode!=null and subBusinessCode!=''">
+		  	AND q.business_code = #{subBusinessCode}
+		  </if>
+		  <if test="userId==null or userId==''">
+		  		and 1=2
+		  </if>
+	</select>
+		<insert id="insertQuestion"  parameterType="java.util.List">  
+	    <selectKey resultType="int" keyProperty="id" order="BEFORE">  
+	        SELECT  
+	        LAST_INSERT_ID()  
+	    </selectKey>  
+	    insert into lv_question (title,description,business_code,is_answer,code,create_time)   
+	    values  
+	    <foreach collection="list" item="item" index="index" separator="," >  
+	        (#{item.title},#{item.description},#{item.businessCode},#{item.isAnswer},#{item.code},now())  
+	    </foreach>  
+	</insert>  
+	
+	
+	<insert id="insertUserQuesRelate"  parameterType="java.util.List">  
+	    <selectKey resultType="int" keyProperty="id" order="BEFORE">  
+	        SELECT  
+	        LAST_INSERT_ID()  
+	    </selectKey>  
+	    insert into lv_user_question (user_code,question_code,is_answer,create_time)   
+	    values  
+	    <foreach collection="list" item="item" index="index" separator="," >  
+	        (#{item.userCode},#{item.questionCode},#{item.isAnswer},now())  
+	    </foreach>  
+	</insert> 
+	<update id="updateUserIsAnswer" parameterType="java.util.Map">
+		update lv_user set is_answer=1 where user_id = #{userCode}
+	</update>
+	<!--web -->
+	<select id="queryQuestionList" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT lq.*,lv.sub_name 
+		FROM lv_question lq
+		left join lv_business_details lv
+		on lv.code = lq.business_code
+			<where>
+				<if test="title!=null and title!=''">
+					and lq.title=#{title}
+				</if>
+			</where>
+		 order by lq.id
+	</select>
+	
+	<select id="queryQuestionById" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT * FROM lv_question
+			<where>
+				<if test="id!=null and id!=''">
+					and id=#{id}
+				</if>
+			</where>
+		 order by id
+	</select>
+	    <!-- 插入 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.Map">
+		INSERT INTO lv_question (
+			title,
+			description,
+			code,
+			business_code,
+			create_time
+		) VALUES (
+			#{title},
+			#{description},
+			#{code},
+			#{business_code},
+			#{create_time}
+		)
+	</insert>
+	
+	<update id="update" parameterType="map">
+		UPDATE lv_question SET
+			title = #{title},
+			code = #{code},
+			description = #{description},
+			business_code = #{business_code}
+		WHERE 
+			ID = #{id} 
+	</update>
+	<delete id="deleteQuestion" parameterType="java.util.HashMap">
+		delete from lv_question 
+		<where>
+			<if test="ids!=null and ids!=''">
+				and id in (${ids})
+			</if>
+			<if test="ids==null or ids==''">
+				and 1=2
+			</if>
+		</where>
+	</delete>
+	
+	<select id="questionCode" resultType="java.lang.Integer">
+		SELECT  CASE WHEN MAX(CODE)!='' THEN MAX(CODE) ELSE 500000 END AS id FROM lv_question WHERE CODE IS NOT NULL;
+	</select>
+</mapper>

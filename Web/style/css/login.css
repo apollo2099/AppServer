@@ -1,0 +1,22 @@
+.login_bg{
+    position: fixed;
+    top: 0;
+    left: 0; 
+    width: auto;
+    height:auto;
+    background: url(../images/bg.png) no-repeat;
+    z-index: -1;
+    background-size:100% 100%;
+}
+.login_frame{
+	position:absolute;
+	margin-left:34%;
+	margin-top:13%;
+}
+.login_panel{
+	padding:30px 70px 20px 70px;
+	opacity: 0.93;
+	box-shadow : 1px 0 2px #fff inset;
+	-webkit-box-shodow : 1px 0 2px #fff inset;
+	-moz-box-shadow : 1px 0 2px #fff inset;
+}
