@@ -1,0 +1,9 @@
+/SkipUrlConfig.xml
+/app.properties
+/com/
+/commons-logging.properties
+/datasource.properties
+/io/
+/log4j.properties
+/mybatis-config.xml
+/spring/
